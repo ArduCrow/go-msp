@@ -15,6 +15,8 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to read attitude: %v", err)
 		}
-		log.Printf("Attitude: %v", attitude)
+		if attitude != nil {
+			log.Printf("Attitude: %v", attitude)
+		}
 	}
 }

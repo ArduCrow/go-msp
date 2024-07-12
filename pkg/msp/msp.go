@@ -11,7 +11,9 @@ const MSP_ATTITUDE = 108
 // Reads and writes Multi wii serial protocol (MSP) from a serial port
 // in order to communicate with a flight controller.
 type MspReader struct {
-	port *serial.Port
+	Port       *serial.Port
+	RcChannels []int
+	MsgCodes   map[string]int
 }
 
 // NewMspReader initializes a new MspReader with the given serial port configuration.
@@ -22,7 +24,7 @@ func NewMspReader(portName string, baudRate int) (*MspReader, error) {
 		return nil, err
 	}
 	fmt.Println("Serial port opened successfully")
-	return &MspReader{port: port}, nil
+	return &MspReader{Port: port}, nil
 }
 
 // SendRawMsg sends a raw MSP message through the serial port
@@ -46,7 +48,7 @@ func (mr *MspReader) SendRawMsg(code int, data []byte) (int, error) {
 		return 0, fmt.Errorf("MSP V2 not supported in this example")
 	}
 
-	n, err := mr.port.Write(buf)
+	n, err := mr.Port.Write(buf)
 	if err != nil {
 		return n, err
 	}
@@ -55,19 +57,20 @@ func (mr *MspReader) SendRawMsg(code int, data []byte) (int, error) {
 
 // ReadAttitude requests and reads the vehicle's attitude (roll, pitch, yaw)
 func (mr *MspReader) ReadAttitude() ([]float64, error) {
+	mr.Port.Flush()
 	_, err := mr.SendRawMsg(MSP_ATTITUDE, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	buf := make([]byte, 14) // 6 bytes header + 6 bytes data + 2 bytes for potential MSP V2
-	n, err := mr.port.Read(buf)
+	n, err := mr.Port.Read(buf)
 	if err != nil {
 		return nil, err
 	}
 
 	if n < 12 { // Not enough data
-		return nil, fmt.Errorf("incomplete data received")
+		return nil, nil
 	}
 
 	// Assuming MSP V1 and data starts at index 5
@@ -84,7 +87,7 @@ func (mr *MspReader) ListenAndPrint() {
 	buf := make([]byte, 128) // Adjust buffer size as needed
 	println("Listening for data...")
 	for {
-		n, err := mr.port.Read(buf)
+		n, err := mr.Port.Read(buf)
 		fmt.Println("Read data")
 		if err != nil {
 			fmt.Printf("Error reading from port: %v", err)
