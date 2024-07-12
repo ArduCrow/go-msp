@@ -15,7 +15,9 @@ func main() {
 	vehicle.Start()
 
 	for {
+		println("Setting channels")
 		vehicle.SetChannels([]int{888, 999, 1000, 1500, 1500, 1500, 1500, 1500})
 	}
+	// select {}
 
 }

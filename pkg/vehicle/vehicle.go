@@ -34,10 +34,11 @@ func (v *Vehicle) Start() {
 			fmt.Println("Channel values:", v.ChannelValues)
 		}
 	}()
-	select {}
+	// select {}
 }
 
 func (v *Vehicle) SetChannels(channels []int) error {
+	fmt.Println("Setting channels:", channels)
 	_, err := v.MspReader.SendRawRC(channels)
 	if err != nil {
 		return err
