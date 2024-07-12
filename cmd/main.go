@@ -12,12 +12,15 @@ func main() {
 		log.Fatalf("Failed to open serial port: %v", err)
 	}
 	for {
-		attitude, err := vehicle.ReadAttitude()
+		err := vehicle.UpdateAttitude()
 		if err != nil {
 			log.Fatalf("Failed to read attitude: %v", err)
 		}
-		if attitude != nil {
-			log.Printf("Attitude: %v", attitude)
+		log.Printf("Attitude: %v", vehicle.Attitude)
+		err = vehicle.UpdateChannels()
+		if err != nil {
+			log.Fatalf("Failed to read channels: %v", err)
 		}
+		log.Printf("Channels: %v", vehicle.ChannelValues)
 	}
 }

@@ -84,17 +84,44 @@ func (mr *MspReader) ReadAttitude() ([]float64, error) {
 	return []float64{roll, pitch, yaw}, nil
 }
 
-// ListenAndPrint listens on the serial port and prints received data.
-func (mr *MspReader) ListenAndPrint() {
-	buf := make([]byte, 128) // Adjust buffer size as needed
-	println("Listening for data...")
-	for {
-		n, err := mr.Port.Read(buf)
-		fmt.Println("Read data")
-		if err != nil {
-			fmt.Printf("Error reading from port: %v", err)
-			continue
-		}
-		fmt.Printf("Received: %q\n", buf[:n])
+func (mr *MspReader) ReadRcChannels() ([]int, error) {
+	mr.Port.Flush()
+	_, err := mr.SendRawMsg(MSP_RC, nil)
+	if err != nil {
+		return nil, err
 	}
+
+	buf := make([]byte, 32) // Adjust buffer size as needed
+	n, err := mr.Port.Read(buf)
+	if err != nil {
+		return nil, err
+	}
+
+	if n < 16 { // Not enough data
+		return nil, nil
+	}
+
+	// Assuming MSP V1 and data starts at index 5
+	data := buf[5 : 5+16]
+	channels := make([]int, 8)
+	for i := 0; i < 8; i++ {
+		channels[i] = int(int16(data[i*2]) | (int16(data[i*2+1]) << 8))
+	}
+
+	return channels, nil
 }
+
+// ListenAndPrint listens on the serial port and prints received data.
+// func (mr *MspReader) ListenAndPrint() {
+// 	buf := make([]byte, 128) // Adjust buffer size as needed
+// 	println("Listening for data...")
+// 	for {
+// 		n, err := mr.Port.Read(buf)
+// 		fmt.Println("Read data")
+// 		if err != nil {
+// 			fmt.Printf("Error reading from port: %v", err)
+// 			continue
+// 		}
+// 		fmt.Printf("Received: %q\n", buf[:n])
+// 	}
+// }

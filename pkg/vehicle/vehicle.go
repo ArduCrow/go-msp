@@ -5,9 +5,10 @@ import (
 	"go-msp/pkg/msp"
 )
 
-// Vehicle represents a vehicle that can be controlled by a remote controller.
 type Vehicle struct {
-	MspReader *msp.MspReader
+	MspReader     *msp.MspReader
+	ChannelValues []int
+	Attitude      []float64
 }
 
 // NewVehicle initializes a new Vehicle with the given serial port configuration.
@@ -20,6 +21,24 @@ func NewVehicle(portName string, baudRate int) (*Vehicle, error) {
 	return &Vehicle{MspReader: mspReader}, nil
 }
 
-func (v *Vehicle) ReadAttitude() ([]float64, error) {
-	return v.MspReader.ReadAttitude()
+func (v *Vehicle) UpdateAttitude() error {
+	att, err := v.MspReader.ReadAttitude()
+	if err != nil {
+		return err
+	}
+	if att != nil {
+		v.Attitude = att
+	}
+	return nil
+}
+
+func (v *Vehicle) UpdateChannels() error {
+	ch, err := v.MspReader.ReadRcChannels()
+	if err != nil {
+		return err
+	}
+	if ch != nil {
+		v.ChannelValues = ch
+	}
+	return nil
 }
