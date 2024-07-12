@@ -21,7 +21,35 @@ func NewVehicle(portName string, baudRate int) (*Vehicle, error) {
 	return &Vehicle{MspReader: mspReader}, nil
 }
 
-func (v *Vehicle) UpdateAttitude() error {
+func (v *Vehicle) Start() {
+	fmt.Println("Starting Vehicle:", v)
+
+	go func() {
+		for {
+			err := v.updateStates()
+			if err != nil {
+				fmt.Println("Failed to read states:", err)
+			}
+			fmt.Println("Attitude:", v.Attitude)
+			fmt.Println("Channel values:", v.ChannelValues)
+		}
+	}()
+	select {}
+}
+
+func (v *Vehicle) updateStates() error {
+	err := v.readAttitude()
+	if err != nil {
+		return err
+	}
+	err = v.readChannels()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (v *Vehicle) readAttitude() error {
 	att, err := v.MspReader.ReadAttitude()
 	if err != nil {
 		return err
@@ -32,7 +60,7 @@ func (v *Vehicle) UpdateAttitude() error {
 	return nil
 }
 
-func (v *Vehicle) UpdateChannels() error {
+func (v *Vehicle) readChannels() error {
 	ch, err := v.MspReader.ReadRcChannels()
 	if err != nil {
 		return err
