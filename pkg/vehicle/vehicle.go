@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/ArduCrow/gomsp/internal/msp"
+	"github.com/ArduCrow/go-msp/internal/msp"
 )
 
 type Vehicle struct {

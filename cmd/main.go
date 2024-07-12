@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/ArduCrow/gomsp/pkg/vehicle"
+	"github.com/ArduCrow/go-msp/pkg/vehicle"
 )
 
 func main() {
