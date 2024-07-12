@@ -24,6 +24,8 @@ func NewVehicle(portName string, baudRate int) (*Vehicle, error) {
 	return &Vehicle{MspReader: mspReader, stopChan: make(chan struct{})}, nil
 }
 
+// Start the vehicle update loop, reads and updates vehicle states from the MSP
+// connection.
 func (v *Vehicle) Start() {
 	fmt.Println("Starting Vehicle:", v)
 	v.wg.Add(1)
@@ -46,6 +48,8 @@ func (v *Vehicle) Start() {
 	}()
 }
 
+// Stop the vehicle update loop and close the serial port connection. Shuts
+// down all goroutines gracefully.
 func (v *Vehicle) Stop() {
 	fmt.Println("Stopping Vehicle:", v)
 	close(v.stopChan)
@@ -53,6 +57,8 @@ func (v *Vehicle) Stop() {
 	v.MspReader.Port.Close()
 }
 
+// Sets the raw RC values (channels, which are PWM values). Vehicle must be in
+// MSP override mode.
 func (v *Vehicle) SetChannels(channels []int) error {
 	fmt.Println("Setting channels:", channels)
 	_, err := v.MspReader.SendRawRC(channels)

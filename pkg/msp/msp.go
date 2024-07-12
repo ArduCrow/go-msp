@@ -19,7 +19,7 @@ type MspReader struct {
 	MsgCodes       map[string]int
 }
 
-// NewMspReader initializes a new MspReader with the given serial port configuration.
+// Initializes a new MspReader with the given serial port configuration.
 func NewMspReader(portName string, baudRate int) (*MspReader, error) {
 	c := &serial.Config{Name: portName, Baud: baudRate}
 	port, err := serial.OpenPort(c)
@@ -30,7 +30,7 @@ func NewMspReader(portName string, baudRate int) (*MspReader, error) {
 	return &MspReader{Port: port}, nil
 }
 
-// SendRawMsg sends a raw MSP message through the serial port
+// Sends a raw MSP message through the serial port
 func (mr *MspReader) SendRawMsg(code int, data []byte) (int, error) {
 	var buf []byte
 	if code < 255 { // MSP V1
@@ -47,8 +47,8 @@ func (mr *MspReader) SendRawMsg(code int, data []byte) (int, error) {
 		}
 		buf[len(buf)-1] = checksum
 	} else {
-		// MSP V2 not implemented in this example
-		return 0, fmt.Errorf("MSP V2 not supported in this example")
+		// MSP V2 not implemented
+		return 0, fmt.Errorf("MSP V2 not supported")
 	}
 
 	n, err := mr.Port.Write(buf)
@@ -58,6 +58,7 @@ func (mr *MspReader) SendRawMsg(code int, data []byte) (int, error) {
 	return n, nil
 }
 
+// Send raw RC channel values to flight controller
 func (mr *MspReader) SendRawRC(data []int) (int, error) {
 	// Convert data to fit into bytes, considering values bigger than 255 need to be split.
 	byteData := make([]byte, 0, len(data)*2) // Each int could be split into 2 bytes.
@@ -75,7 +76,7 @@ func (mr *MspReader) SendRawRC(data []int) (int, error) {
 	return mr.SendRawMsg(MSP_SET_RAW_RC, byteData)
 }
 
-// ReadAttitude requests and reads the vehicle's attitude (roll, pitch, yaw)
+// Requests and reads the vehicle's attitude (roll, pitch, yaw)
 func (mr *MspReader) ReadAttitude() ([]float64, error) {
 	mr.Port.Flush()
 	_, err := mr.SendRawMsg(MSP_ATTITUDE, nil)
@@ -102,6 +103,7 @@ func (mr *MspReader) ReadAttitude() ([]float64, error) {
 	return []float64{roll, pitch, yaw}, nil
 }
 
+// Requests and reads the vehicle's RC channels
 func (mr *MspReader) ReadRcChannels() ([]int, error) {
 	mr.Port.Flush()
 	_, err := mr.SendRawMsg(MSP_RC, nil)
@@ -128,18 +130,3 @@ func (mr *MspReader) ReadRcChannels() ([]int, error) {
 
 	return channels, nil
 }
-
-// ListenAndPrint listens on the serial port and prints received data.
-// func (mr *MspReader) ListenAndPrint() {
-// 	buf := make([]byte, 128) // Adjust buffer size as needed
-// 	println("Listening for data...")
-// 	for {
-// 		n, err := mr.Port.Read(buf)
-// 		fmt.Println("Read data")
-// 		if err != nil {
-// 			fmt.Printf("Error reading from port: %v", err)
-// 			continue
-// 		}
-// 		fmt.Printf("Received: %q\n", buf[:n])
-// 	}
-// }
