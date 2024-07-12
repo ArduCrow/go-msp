@@ -8,6 +8,7 @@ import (
 
 const MSP_ATTITUDE = 108
 const MSP_RC = 105
+const MSP_SET_RAW_RC = 200
 
 // Reads and writes Multi wii serial protocol (MSP) from a serial port
 // in order to communicate with a flight controller.
@@ -55,6 +56,23 @@ func (mr *MspReader) SendRawMsg(code int, data []byte) (int, error) {
 		return n, err
 	}
 	return n, nil
+}
+
+func (mr *MspReader) SendRawRC(data []int) (int, error) {
+	// Convert data to fit into bytes, considering values bigger than 255 need to be split.
+	byteData := make([]byte, 0, len(data)*2) // Each int could be split into 2 bytes.
+	for _, val := range data {
+		if val > 255 {
+			// Split the int into two bytes if it's larger than 255.
+			byteData = append(byteData, byte(val>>8), byte(val&0xFF))
+		} else {
+			// Directly append the value as a byte if it's 255 or less.
+			byteData = append(byteData, byte(val))
+		}
+	}
+
+	// Send the message using the existing SendRawMsg method.
+	return mr.SendRawMsg(MSP_SET_RAW_RC, byteData)
 }
 
 // ReadAttitude requests and reads the vehicle's attitude (roll, pitch, yaw)
