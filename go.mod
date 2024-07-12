@@ -1,4 +1,4 @@
-module go-msp
+module github.com/ArduCrow/go-msp
 
 go 1.22.5
 
