@@ -7,13 +7,15 @@ import (
 )
 
 const MSP_ATTITUDE = 108
+const MSP_RC = 105
 
 // Reads and writes Multi wii serial protocol (MSP) from a serial port
 // in order to communicate with a flight controller.
 type MspReader struct {
-	Port       *serial.Port
-	RcChannels []int
-	MsgCodes   map[string]int
+	Port           *serial.Port
+	RcChannels     []int
+	ActiveChannels int
+	MsgCodes       map[string]int
 }
 
 // NewMspReader initializes a new MspReader with the given serial port configuration.

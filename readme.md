@@ -1,3 +1,3 @@
 # GO MSP
 
-Go for the Muti Wii Serial protocol
+Go for the Multi Wii Serial protocol
