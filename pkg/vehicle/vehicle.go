@@ -3,12 +3,15 @@ package vehicle
 import (
 	"fmt"
 	"go-msp/pkg/msp"
+	"sync"
 )
 
 type Vehicle struct {
 	MspReader     *msp.MspReader
 	ChannelValues []int
 	Attitude      []float64
+	stopChan      chan struct{}
+	wg            sync.WaitGroup
 }
 
 // NewVehicle initializes a new Vehicle with the given serial port configuration.
@@ -18,17 +21,26 @@ func NewVehicle(portName string, baudRate int) (*Vehicle, error) {
 		return nil, err
 	}
 	fmt.Println("Vehicle initialized successfully")
-	return &Vehicle{MspReader: mspReader}, nil
+	return &Vehicle{MspReader: mspReader, stopChan: make(chan struct{})}, nil
 }
 
 func (v *Vehicle) Start() {
 	fmt.Println("Starting Vehicle:", v)
+	v.wg.Add(1)
 
 	go func() {
+		defer v.wg.Done()
 		for {
-			err := v.updateStates()
-			if err != nil {
-				fmt.Println("Failed to read states:", err)
+			select {
+			case <-v.stopChan:
+				fmt.Println("STOP SIGNAL RECEIVED")
+				return
+			default:
+				err := v.updateStates()
+				if err != nil {
+					fmt.Println("Failed to read states:", err)
+				}
+				fmt.Println("Attitude:", v.Attitude)
 			}
 		}
 	}()
@@ -36,6 +48,8 @@ func (v *Vehicle) Start() {
 
 func (v *Vehicle) Stop() {
 	fmt.Println("Stopping Vehicle:", v)
+	close(v.stopChan)
+	v.wg.Wait()
 	v.MspReader.Port.Close()
 }
 
