@@ -1,9 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"go-msp/pkg/vehicle"
 	"log"
-	"time"
+	"os"
 )
 
 func main() {
@@ -15,9 +16,14 @@ func main() {
 
 	vehicle.Start()
 
-	for i := 0; i < 10; i++ {
-		log.Printf("Second %d", i)
-		time.Sleep(time.Second)
+	// press ENTER to terminate and close vehicle gracefully
+	scanner := bufio.NewScanner(os.Stdin)
+	if scanner.Scan() {
+		vehicle.Stop()
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatalf("Error waiting for input: %v", err)
 	}
 
 }
