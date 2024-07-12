@@ -2,8 +2,9 @@ package vehicle
 
 import (
 	"fmt"
-	"go-msp/pkg/msp"
 	"sync"
+
+	"github.com/ArduCrow/gomsp/internal/msp"
 )
 
 type Vehicle struct {

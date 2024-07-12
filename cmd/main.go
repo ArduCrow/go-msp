@@ -2,9 +2,10 @@ package main
 
 import (
 	"bufio"
-	"go-msp/pkg/vehicle"
 	"log"
 	"os"
+
+	"github.com/ArduCrow/gomsp/pkg/vehicle"
 )
 
 func main() {
