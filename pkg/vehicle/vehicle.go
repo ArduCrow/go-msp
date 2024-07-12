@@ -30,11 +30,13 @@ func (v *Vehicle) Start() {
 			if err != nil {
 				fmt.Println("Failed to read states:", err)
 			}
-			// fmt.Println("Attitude:", v.Attitude)
-			fmt.Println("Channel values:", v.ChannelValues)
 		}
 	}()
-	// select {}
+}
+
+func (v *Vehicle) Stop() {
+	fmt.Println("Stopping Vehicle:", v)
+	v.MspReader.Port.Close()
 }
 
 func (v *Vehicle) SetChannels(channels []int) error {
