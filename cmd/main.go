@@ -3,6 +3,7 @@ package main
 import (
 	"go-msp/pkg/vehicle"
 	"log"
+	"time"
 )
 
 func main() {
@@ -13,6 +14,10 @@ func main() {
 	}
 
 	vehicle.Start()
-	select {}
+
+	for i := 0; i < 10; i++ {
+		log.Printf("Second %d", i)
+		time.Sleep(time.Second)
+	}
 
 }
