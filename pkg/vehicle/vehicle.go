@@ -1,7 +1,7 @@
 package vehicle
 
 import (
-	"fmt"
+	"log"
 	"sync"
 
 	"github.com/ArduCrow/go-msp/internal/msp"
@@ -21,14 +21,14 @@ func NewVehicle(portName string, baudRate int) (*Vehicle, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("Vehicle initialized successfully")
+	log.Println("GMSP-VEH: Vehicle initialized successfully")
 	return &Vehicle{MspReader: mspReader, stopChan: make(chan struct{})}, nil
 }
 
 // Start the vehicle update loop, reads and updates vehicle states from the MSP
 // connection.
 func (v *Vehicle) Start() {
-	fmt.Println("Starting Vehicle:", v)
+	log.Println("GMSP-VEH: Starting Vehicle:", v)
 	v.wg.Add(1)
 
 	go func() {
@@ -36,14 +36,13 @@ func (v *Vehicle) Start() {
 		for {
 			select {
 			case <-v.stopChan:
-				fmt.Println("STOP SIGNAL RECEIVED")
+				log.Println("GMSP-VEH: STOP SIGNAL RECEIVED")
 				return
 			default:
 				err := v.updateStates()
 				if err != nil {
-					fmt.Println("Failed to read states:", err)
+					log.Println("GMSP-VEH: Failed to read states:", err)
 				}
-				fmt.Println("Attitude:", v.Attitude)
 			}
 		}
 	}()
@@ -52,7 +51,7 @@ func (v *Vehicle) Start() {
 // Stop the vehicle update loop and close the serial port connection. Shuts
 // down all goroutines gracefully.
 func (v *Vehicle) Stop() {
-	fmt.Println("Stopping Vehicle:", v)
+	log.Println("GMSP-VEH: Stopping Vehicle:", v)
 	close(v.stopChan)
 	v.wg.Wait()
 	v.MspReader.Port.Close()
@@ -61,7 +60,7 @@ func (v *Vehicle) Stop() {
 // Sets the raw RC values (channels, which are PWM values). Vehicle must be in
 // MSP override mode.
 func (v *Vehicle) SetChannels(channels []int) error {
-	fmt.Println("Setting channels:", channels)
+	log.Println("GMSP-VEH: Setting channels:", channels)
 	_, err := v.MspReader.SendRawRC(channels)
 	if err != nil {
 		return err

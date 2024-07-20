@@ -2,6 +2,7 @@ package msp
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/tarm/serial"
 )
@@ -26,7 +27,7 @@ func NewMspReader(portName string, baudRate int) (*MspReader, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("Serial port opened successfully")
+	log.Println("GMSP-MSP: Serial port opened successfully")
 	return &MspReader{Port: port}, nil
 }
 
@@ -48,7 +49,7 @@ func (mr *MspReader) SendRawMsg(code int, data []byte) (int, error) {
 		buf[len(buf)-1] = checksum
 	} else {
 		// MSP V2 not implemented
-		return 0, fmt.Errorf("MSP V2 not supported")
+		return 0, fmt.Errorf("GMSP-MSP: MSP V2 not supported")
 	}
 
 	n, err := mr.Port.Write(buf)
