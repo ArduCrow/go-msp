@@ -59,6 +59,8 @@ func (mr *MspReader) SendRawMsg(code int, data []byte) (int, error) {
 
 // Send raw RC channel values to flight controller
 func (mr *MspReader) SendRawRC(data []int) (int, error) {
+	mr.mu.Lock()
+	defer mr.mu.Unlock()
 	// Convert data to fit into bytes, considering values bigger than 255 need to be split.
 	byteData := make([]byte, 0, len(data)*2) // Each int could be split into 2 bytes.
 	for _, val := range data {
