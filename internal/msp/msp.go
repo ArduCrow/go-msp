@@ -3,13 +3,10 @@ package msp
 import (
 	"fmt"
 	"log"
+	"sync"
 
 	"github.com/tarm/serial"
 )
-
-const MSP_ATTITUDE = 108
-const MSP_RC = 105
-const MSP_SET_RAW_RC = 200
 
 // Reads and writes Multi wii serial protocol (MSP) from a serial port
 // in order to communicate with a flight controller.
@@ -18,6 +15,7 @@ type MspReader struct {
 	RcChannels     []int
 	ActiveChannels int
 	MsgCodes       map[string]int
+	mu             sync.Mutex
 }
 
 // Initializes a new MspReader with the given serial port configuration.
@@ -130,4 +128,61 @@ func (mr *MspReader) ReadRcChannels() ([]int, error) {
 	}
 
 	return channels, nil
+}
+
+// Listen for and receive messages from the serial port. Uses a mutex to prevent
+// concurrent writes to the serial port. Returns if an error occurs while reading.
+func (mr *MspReader) receiveRawMessage() ([]byte, error) {
+	mr.mu.Lock()
+	defer mr.mu.Unlock()
+
+	buf := make([]byte, 32) // Adjust buffer size as needed
+	n, err := mr.Port.Read(buf)
+	if err != nil {
+		log.Println("GMSP-MSP: Failed to read from serial port:", err)
+		return nil, err
+	}
+
+	if n < 6 {
+		log.Println("GMSP-MSP: Not enough data received")
+		return nil, nil
+	}
+
+	// Assuming MSP V1 and data starts at index 5
+	data := buf[5 : 5+6]
+	log.Printf("GMSP-MSP: Received data: %v", data)
+	return data, nil
+}
+
+// Check if the flight controller is ready to arm and fly
+func (mr *MspReader) CheckReady() bool {
+	// 3 - msp version
+	// 61 - msp arming config
+	// 101 - MSP status
+
+	_, err := mr.SendRawMsg(3, nil)
+	if err != nil {
+		log.Println("GMSP-MSP: Check ready - failed to communicate with FC:", err)
+		return false
+	}
+	data, err := mr.receiveRawMessage()
+
+	switch {
+	case err != nil:
+		log.Println("GMSP-MSP: Failed to get FC state:", err)
+		return false
+	case data == nil:
+		log.Println("GMSP-MSP: Check ready - no data received")
+		return false
+	case len(data) < 7:
+		log.Println("GMSP-MSP: Check ready - not enough data received")
+		return false
+	case data[6] != 100:
+		log.Println("GMSP-MSP: Flight controller not ready", data[6])
+		return false
+	}
+
+	mspFcVersion := int(data[6])
+	log.Println("GMSP-MSP: FC ready, MSP version:", mspFcVersion)
+	return true
 }
