@@ -98,7 +98,7 @@ func (v *Vehicle) readChannels() error {
 	}
 
 	for _, chValue := range ch {
-		if chValue < 900 || chValue > 2100 {
+		if chValue < 850 || chValue > 2200 {
 			log.Println("GMSP-MSP: Invalid RC channel value, skipping update:", ch)
 			return nil
 		}
