@@ -31,6 +31,7 @@ func NewMspReader(portName string, baudRate int) (*MspReader, error) {
 
 // Sends a raw MSP message through the serial port
 func (mr *MspReader) SendRawMsg(code int, data []byte) (int, error) {
+	mr.Port.Flush()
 	var buf []byte
 	if code < 255 { // MSP V1
 		buf = make([]byte, 6+len(data))
@@ -61,20 +62,21 @@ func (mr *MspReader) SendRawMsg(code int, data []byte) (int, error) {
 func (mr *MspReader) SendRawRC(data []int) (int, error) {
 	mr.mu.Lock()
 	defer mr.mu.Unlock()
-	// Convert data to fit into bytes, considering values bigger than 255 need to be split.
-	byteData := make([]byte, 0, len(data)*2) // Each int could be split into 2 bytes.
-	for _, val := range data {
-		if val > 255 {
-			// Split the int into two bytes if it's larger than 255.
-			byteData = append(byteData, byte(val>>8), byte(val&0xFF))
-		} else {
-			// Directly append the value as a byte if it's 255 or less.
-			byteData = append(byteData, byte(val))
-		}
+
+	// Ensure the data slice contains 8 RC channels
+	// if len(data) != 8 {
+	// 	return 0, fmt.Errorf("GMSP-MSP: Expected 8 RC channels, got %d", len(data))
+	// }
+
+	// Convert RC channel values to bytes (low-byte/high-byte order)
+	byteData := make([]byte, 16) // 8 channels * 2 bytes each
+	for i, val := range data {
+		byteData[i*2] = byte(val & 0xFF)          // Low byte
+		byteData[i*2+1] = byte((val >> 8) & 0xFF) // High byte
 	}
 
-	// Send the message using the existing SendRawMsg method.
-	return mr.SendRawMsg(MSP_SET_RAW_RC, byteData)
+	// Send the message using the existing SendRawMsg method
+	return mr.SendRawMsg(200, byteData) // 200 = MSP_SET_RAW_RC
 }
 
 // Requests and reads the vehicle's attitude (roll, pitch, yaw)
